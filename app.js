@@ -18,8 +18,8 @@ const laptopData = {
             "buy_price": 18000,
             "warranty": "12 months",
             "images": [
-                "https://ppl-ai-image-service.s3.amazonaws.com/web-images/image:66",
-                "https://ppl-ai-image-service.s3.amazonaws.com/web-images/image:68"
+                "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&h=300&fit=crop"
             ],
             "features": ["Business Grade", "Lightweight", "Long Battery Life"]
         },
@@ -38,8 +38,8 @@ const laptopData = {
             "buy_price": 22000,
             "warranty": "12 months",
             "images": [
-                "https://ppl-ai-image-service.s3.amazonaws.com/web-images/image:64",
-                "https://ppl-ai-image-service.s3.amazonaws.com/web-images/image:67"
+                "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=400&h=300&fit=crop"
             ],
             "features": ["Professional Series", "Security Chip", "Durable Design"]
         },
@@ -58,7 +58,8 @@ const laptopData = {
             "buy_price": 35000,
             "warranty": "12 months",
             "images": [
-                "https://ppl-ai-image-service.s3.amazonaws.com/web-images/image:65"
+                "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=400&h=300&fit=crop"
             ],
             "features": ["Premium Build", "Carbon Fiber", "Ultra Lightweight"]
         },
@@ -77,7 +78,8 @@ const laptopData = {
             "buy_price": 55000,
             "warranty": "12 months",
             "images": [
-                "https://ppl-ai-image-service.s3.amazonaws.com/web-images/image:69"
+                "https://images.unsplash.com/photo-1517336714731-489689fd1ca4?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=400&h=300&fit=crop"
             ],
             "features": ["M1 Processor", "All Day Battery", "Retina Display"]
         },
@@ -96,7 +98,7 @@ const laptopData = {
             "buy_price": 25000,
             "warranty": "12 months",
             "images": [
-                "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=500"
+                "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=400&h=300&fit=crop"
             ],
             "features": ["AMD Ryzen", "Full HD Display", "Fast Performance"]
         },
@@ -115,7 +117,7 @@ const laptopData = {
             "buy_price": 70000,
             "warranty": "12 months",
             "images": [
-                "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500"
+                "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&h=300&fit=crop"
             ],
             "features": ["Workstation Grade", "4K Display", "High Performance"]
         }
@@ -145,12 +147,13 @@ document.addEventListener('DOMContentLoaded', function() {
     loadProductGrid();
     setupEventListeners();
     setupSearch();
+    setupPolicyNavigation(); // NEW: Setup policy page navigation
 });
 
 function initializeApp() {
     // Show home section by default
     showSection('home');
-    
+
     // Set minimum date for pickup scheduling
     const pickupDateInput = document.getElementById('pickupDate');
     if (pickupDateInput) {
@@ -158,6 +161,35 @@ function initializeApp() {
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
         pickupDateInput.min = tomorrow.toISOString().split('T')[0];
+    }
+}
+
+// NEW: Setup policy page navigation
+function setupPolicyNavigation() {
+    // Handle all hash links (including footer policy links)
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('a[href^="#"]');
+        if (link) {
+            e.preventDefault();
+            const sectionId = link.getAttribute('href').substring(1);
+            if (sectionId) {
+                showSection(sectionId);
+                // Update nav active state if it's a main nav link
+                updateActiveNavLink(document.querySelector(`nav a[href="#${sectionId}"]`));
+            }
+        }
+    });
+
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', function(e) {
+        const sectionId = window.location.hash ? window.location.hash.substring(1) : 'home';
+        showSection(sectionId);
+    });
+
+    // Handle initial hash on page load
+    if (window.location.hash) {
+        const sectionId = window.location.hash.substring(1);
+        showSection(sectionId);
     }
 }
 
@@ -169,6 +201,8 @@ function setupEventListeners() {
             const section = link.getAttribute('href').substring(1);
             showSection(section);
             updateActiveNavLink(link);
+            // Update URL hash
+            window.history.pushState(null, '', `#${section}`);
         });
     });
 
@@ -179,14 +213,17 @@ function setupEventListeners() {
             if (section) {
                 showSection(section);
                 updateActiveNavLink(document.querySelector(`[href="#${section}"]`));
+                window.history.pushState(null, '', `#${section}`);
             }
         });
     });
 
     // Cart button
-    cartBtn.addEventListener('click', () => {
-        showCartModal();
-    });
+    if (cartBtn) {
+        cartBtn.addEventListener('click', () => {
+            showCartModal();
+        });
+    }
 
     // Filters
     setupFilters();
@@ -199,6 +236,225 @@ function setupEventListeners() {
 
     // Modal functionality
     setupModals();
+}
+
+// Enhanced showSection function with policy page support
+function showSection(sectionId) {
+    console.log('Showing section:', sectionId); // Debug log
+
+    // Hide all sections
+    sections.forEach(section => {
+        section.style.display = 'none';
+    });
+
+    // Policy pages are embedded in home section, so we need special handling
+    const policyPages = ['faq', 'warranty', 'refund', 'privacy', 'terms'];
+
+    if (policyPages.includes(sectionId)) {
+        // Show the home section but scroll to policy content
+        const homeSection = document.getElementById('home');
+        if (homeSection) {
+            homeSection.style.display = 'block';
+        }
+
+        // Find and show the specific policy section
+        const policySection = document.getElementById(sectionId);
+        if (policySection) {
+            // Hide all policy sections first
+            policyPages.forEach(pageId => {
+                const page = document.getElementById(pageId);
+                if (page && page.style) {
+                    page.style.display = 'none';
+                }
+            });
+
+            // Show the requested policy section
+            policySection.style.display = 'block';
+
+            // Scroll to the policy section
+            setTimeout(() => {
+                policySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        } else {
+            console.warn('Policy section not found:', sectionId);
+            // Fallback: create policy sections dynamically if they don't exist
+            createPolicySection(sectionId);
+        }
+    } else {
+        // Regular sections
+        const targetSection = document.getElementById(sectionId);
+        if (targetSection) {
+            targetSection.style.display = 'block';
+        } else {
+            // Fallback to home
+            const homeSection = document.getElementById('home');
+            if (homeSection) {
+                homeSection.style.display = 'block';
+            }
+        }
+
+        // Hide all policy sections when showing regular sections
+        policyPages.forEach(pageId => {
+            const page = document.getElementById(pageId);
+            if (page && page.style) {
+                page.style.display = 'none';
+            }
+        });
+    }
+}
+
+// NEW: Create policy section dynamically if missing
+function createPolicySection(sectionId) {
+    const homeSection = document.getElementById('home');
+    if (!homeSection) return;
+
+    let content = '';
+    let title = '';
+
+    switch(sectionId) {
+        case 'faq':
+            title = 'Frequently Asked Questions';
+            content = `
+                <div class="section--policy">
+                    <div class="container">
+                        <h2 class="section__title">Frequently Asked Questions</h2>
+                        <div class="faq-content">
+                            <div class="faq-item">
+                                <h4>What is a refurbished laptop?</h4>
+                                <p>A refurbished laptop is a pre-owned device that has been professionally restored to like-new condition. Each laptop undergoes comprehensive testing, cleaning, component replacement (if needed), and quality certification before being offered for sale.</p>
+                            </div>
+                            <div class="faq-item">
+                                <h4>What warranty do you provide?</h4>
+                                <p>All refurbished laptops come with a comprehensive 12-month warranty covering all hardware components, including motherboard, processor, RAM, storage, display, and battery. We also provide 15 days return policy for complete satisfaction.</p>
+                            </div>
+                            <div class="faq-item">
+                                <h4>How do I sell my laptop to you?</h4>
+                                <p>Our selling process is simple: (1) Provide your laptop details online, (2) Answer condition assessment questions, (3) Receive instant quote, (4) Schedule free pickup. We handle evaluation, payment processing, and provide instant payment upon verification.</p>
+                            </div>
+                            <div class="faq-item">
+                                <h4>Do you provide free pickup and delivery?</h4>
+                                <p>Yes! We offer completely free doorstep pickup for laptop sales and free delivery for purchases within Bangalore and major Indian cities. For remote locations, nominal shipping charges may apply.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            break;
+        case 'warranty':
+            title = 'Warranty Policy';
+            content = `
+                <div class="section--policy">
+                    <div class="container">
+                        <h2 class="section__title">Warranty Policy</h2>
+                        <div class="policy-content">
+                            <h3>12-Month Comprehensive Warranty</h3>
+                            <p>At The One Source IT Solutions, we provide comprehensive warranty coverage on all our refurbished laptops to ensure your complete peace of mind.</p>
+                            <h3>What's Covered</h3>
+                            <ul>
+                                <li>Motherboard and all internal components</li>
+                                <li>Processor and memory modules</li>
+                                <li>Display and backlight system</li>
+                                <li>Keyboard and touchpad</li>
+                                <li>Battery (minimum 70% capacity guarantee)</li>
+                                <li>All ports and connectivity features</li>
+                            </ul>
+                            <h3>Warranty Support</h3>
+                            <p><strong>Phone:</strong> +91-9876543210<br>
+                            <strong>Email:</strong> warranty@theonesourceit.com<br>
+                            <strong>Hours:</strong> Monday to Saturday, 9:00 AM to 7:00 PM</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            break;
+        case 'refund':
+            title = 'Refund Policy';
+            content = `
+                <div class="section--policy">
+                    <div class="container">
+                        <h2 class="section__title">Refund Policy</h2>
+                        <div class="policy-content">
+                            <h3>15-Day Money Back Guarantee</h3>
+                            <p>We stand behind the quality of our refurbished laptops with a comprehensive 15-day money back guarantee. If you're not completely satisfied with your purchase, we'll provide a full refund with no questions asked.</p>
+                            <h3>Return Process</h3>
+                            <ol>
+                                <li>Contact us at +91-9876543210 or refunds@theonesourceit.com</li>
+                                <li>Provide your order number and reason for return</li>
+                                <li>Receive return authorization and instructions</li>
+                                <li>Pack the item securely with all accessories</li>
+                                <li>Schedule free pickup or drop at our center</li>
+                                <li>Receive inspection confirmation and refund</li>
+                            </ol>
+                            <h3>Refund Timeline</h3>
+                            <p>Refunds are processed within 5-7 business days after we receive and inspect the returned item.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            break;
+        case 'privacy':
+            title = 'Privacy Policy';
+            content = `
+                <div class="section--policy">
+                    <div class="container">
+                        <h2 class="section__title">Privacy Policy</h2>
+                        <div class="policy-content">
+                            <h3>Information We Collect</h3>
+                            <p>We collect information to provide better services to our customers, including personal information, device specifications, and transaction data.</p>
+                            <h3>How We Use Information</h3>
+                            <ul>
+                                <li>Process transactions and provide services</li>
+                                <li>Communicate about orders and support</li>
+                                <li>Improve our services and customer experience</li>
+                                <li>Comply with legal requirements</li>
+                            </ul>
+                            <h3>Data Security</h3>
+                            <p>We implement appropriate security measures to protect your information through encrypted transmission, secure storage, and limited access protocols.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            break;
+        case 'terms':
+            title = 'Terms of Service';
+            content = `
+                <div class="section--policy">
+                    <div class="container">
+                        <h2 class="section__title">Terms of Service</h2>
+                        <div class="policy-content">
+                            <h3>Agreement to Terms</h3>
+                            <p>By accessing and using The One Source IT Solutions services, you agree to be bound by these Terms of Service and all applicable laws and regulations.</p>
+                            <h3>Services Description</h3>
+                            <p>We provide a marketplace for buying and selling refurbished laptops, including quality assessment, refurbishment, warranty services, and customer support.</p>
+                            <h3>Limitation of Liability</h3>
+                            <p>Our liability is limited to the purchase price of the product. We are not responsible for indirect, consequential, or incidental damages.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            break;
+    }
+
+    // Create the section element
+    const policySection = document.createElement('section');
+    policySection.id = sectionId;
+    policySection.className = 'section';
+    policySection.innerHTML = content;
+    policySection.style.display = 'block';
+
+    // Append to home section or body
+    homeSection.appendChild(policySection);
+
+    // Scroll to the new section
+    setTimeout(() => {
+        policySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+}
+
+function updateActiveNavLink(activeLink) {
+    if (!activeLink) return;
+    navLinks.forEach(link => link.classList.remove('active'));
+    activeLink.classList.add('active');
 }
 
 // Enhanced Search Functionality
@@ -252,7 +508,7 @@ function createSearchIndex() {
             laptop.condition,
             ...laptop.features
         ];
-        
+
         terms.forEach(term => {
             if (term && typeof term === 'string') {
                 index.push({
@@ -284,7 +540,7 @@ function showSearchSuggestions(query, index) {
     searchSuggestions.innerHTML = uniqueMatches.map(match => 
         `<div class="search-suggestion" data-laptop-id="${match.laptop.id}">
             <strong>${match.displayText}</strong>
-            <small> - ${match.laptop.processor} | ${match.laptop.ram} | ₹${match.laptop.sell_price.toLocaleString()}</small>
+            <span> - ${match.laptop.processor} | ${match.laptop.ram} | ₹${match.laptop.sell_price.toLocaleString()}</span>
         </div>`
     ).join('');
 
@@ -302,7 +558,9 @@ function showSearchSuggestions(query, index) {
 }
 
 function hideSearchSuggestions() {
-    searchSuggestions.style.display = 'none';
+    if (searchSuggestions) {
+        searchSuggestions.style.display = 'none';
+    }
 }
 
 function performSearch(query) {
@@ -321,22 +579,7 @@ function performSearch(query) {
     updateActiveNavLink(document.querySelector('[href="#buy"]'));
     loadProductGrid();
     hideSearchSuggestions();
-}
-
-function showSection(sectionId) {
-    sections.forEach(section => {
-        section.style.display = 'none';
-    });
-    
-    const targetSection = document.getElementById(sectionId);
-    if (targetSection) {
-        targetSection.style.display = 'block';
-    }
-}
-
-function updateActiveNavLink(activeLink) {
-    navLinks.forEach(link => link.classList.remove('active'));
-    activeLink.classList.add('active');
+    window.history.pushState(null, '', '#buy');
 }
 
 function loadFeaturedLaptops() {
@@ -374,40 +617,45 @@ function loadProductGrid() {
 function createLaptopCard(laptop) {
     const card = document.createElement('div');
     card.className = 'laptop-card';
-    
+
     const discountPercent = Math.round((1 - laptop.sell_price / laptop.original_price) * 100);
-    const gradeClass = laptop.grade === 'A' ? 'excellent' : laptop.grade === 'B' ? 'good' : 'fair';
-    
+
     // Use first image if available, otherwise fallback to emoji
     const imageHtml = laptop.images && laptop.images.length > 0 
         ? `<img src="${laptop.images[0]}" alt="${laptop.brand} ${laptop.model}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-           <div style="display:none; font-size:4rem; color:#6b7280; align-items:center; justify-content:center; height:100%;">💻</div>`
-        : `<div style="font-size:4rem; color:#6b7280;">💻</div>`;
-    
+           <div class="laptop-emoji" style="display:none; font-size: 4rem; align-items: center; justify-content: center; height: 220px;">💻</div>`
+        : `<div class="laptop-emoji" style="font-size: 4rem; display: flex; align-items: center; justify-content: center; height: 220px;">💻</div>`;
+
+    // Stock status
+    const stockStatus = laptop.id <= 3 ? 'low' : 'available';
+    const stockText = laptop.id <= 3 ? `⚠ Only ${Math.floor(Math.random() * 8) + 2} left` : '✓ In stock';
+
     card.innerHTML = `
-        <div class="laptop-image">${imageHtml}</div>
+        <div class="laptop-image">
+            ${imageHtml}
+        </div>
         <div class="laptop-details">
             <div class="laptop-brand">${laptop.brand}</div>
             <div class="laptop-model">${laptop.model}</div>
             <div class="laptop-specs">
-                <span>Processor: ${laptop.processor}</span>
-                <span>RAM: ${laptop.ram}</span>
-                <span>Storage: ${laptop.storage}</span>
-                <span>Screen: ${laptop.screen}</span>
+                <div>Processor: ${laptop.processor}</div>
+                <div>RAM: ${laptop.ram}</div>
+                <div>Storage: ${laptop.storage}</div>
+                <div>Screen: ${laptop.screen}</div>
             </div>
-            <div class="grade-badge ${gradeClass}">Grade ${laptop.grade} - ${laptop.condition}</div>
+            <div class="stock-info stock-${stockStatus}">${stockText}</div>
             <div class="laptop-pricing">
                 <span class="original-price">₹${laptop.original_price.toLocaleString()}</span>
                 <span class="current-price">₹${laptop.sell_price.toLocaleString()}</span>
                 <span class="discount">${discountPercent}% OFF</span>
             </div>
             <div class="laptop-actions">
-                <button class="btn btn--outline" onclick="viewLaptopDetails(${laptop.id})">View Details</button>
-                <button class="btn btn--primary" onclick="addToCart(${laptop.id})">Add to Cart</button>
+                <button class="btn btn--primary" onclick="viewLaptopDetails(${laptop.id})">View Details</button>
+                <button class="btn btn--outline" onclick="addToCart(${laptop.id})">Add to Cart</button>
             </div>
         </div>
     `;
-    
+
     return card;
 }
 
@@ -416,12 +664,6 @@ function setupFilters() {
     const brandFilters = document.getElementById('brandFilters');
     if (brandFilters) {
         brandFilters.addEventListener('change', applyFilters);
-    }
-
-    // Grade filters
-    const gradeFilters = document.getElementById('gradeFilters');
-    if (gradeFilters) {
-        gradeFilters.addEventListener('change', applyFilters);
     }
 
     // RAM filters (now checkboxes)
@@ -456,12 +698,6 @@ function applyFilters() {
     const selectedBrands = Array.from(document.querySelectorAll('#brandFilters input:checked')).map(cb => cb.value);
     if (selectedBrands.length > 0) {
         filtered = filtered.filter(laptop => selectedBrands.includes(laptop.brand));
-    }
-
-    // Grade filter
-    const selectedGrades = Array.from(document.querySelectorAll('#gradeFilters input:checked')).map(cb => cb.value);
-    if (selectedGrades.length > 0) {
-        filtered = filtered.filter(laptop => selectedGrades.includes(laptop.grade));
     }
 
     // RAM filter (now checkboxes)
@@ -500,9 +736,6 @@ function applySorting() {
         case 'brand':
             filteredLaptops.sort((a, b) => a.brand.localeCompare(b.brand));
             break;
-        case 'grade':
-            filteredLaptops.sort((a, b) => a.grade.localeCompare(b.grade));
-            break;
     }
 
     loadProductGrid();
@@ -510,8 +743,8 @@ function applySorting() {
 
 function clearAllFilters() {
     // Clear all checkboxes
-    document.querySelectorAll('#brandFilters input, #gradeFilters input, #ramFilters input').forEach(cb => cb.checked = false);
-    
+    document.querySelectorAll('#brandFilters input, #ramFilters input').forEach(cb => cb.checked = false);
+
     // Clear selects
     document.getElementById('priceFilter').value = '';
     document.getElementById('sortBy').value = 'price-low';
@@ -534,75 +767,73 @@ function viewLaptopDetails(laptopId) {
 
     const modal = document.getElementById('productModal');
     const modalContent = document.getElementById('modalContent');
-    
+
     const discountPercent = Math.round((1 - laptop.sell_price / laptop.original_price) * 100);
-    const gradeClass = laptop.grade === 'A' ? 'excellent' : laptop.grade === 'B' ? 'good' : 'fair';
 
     // Create image gallery
     const imageGallery = laptop.images && laptop.images.length > 0 
         ? `<div class="image-gallery">
-             ${laptop.images.map((img, index) => 
-                `<img src="${img}" alt="${laptop.brand} ${laptop.model} - Image ${index + 1}" 
-                     style="width: 100%; margin-bottom: 8px; border-radius: 8px;" 
-                     onerror="this.style.display='none';">`
-             ).join('')}
+            ${laptop.images.map((img, index) => 
+                `<img src="${img}" alt="${laptop.brand} ${laptop.model} - View ${index + 1}" onerror="this.style.display='none';">`
+            ).join('')}
            </div>`
-        : `<div class="product-detail__image">💻</div>`;
+        : `<div style="font-size: 4rem; text-align: center; padding: 2rem;">💻</div>`;
 
     modalContent.innerHTML = `
+        <span class="close" onclick="closeModal('productModal')">&times;</span>
         <div class="product-detail">
-            ${imageGallery}
+            <div class="product-detail__image">
+                ${imageGallery}
+            </div>
             <div class="product-detail__info">
                 <h2>${laptop.brand} ${laptop.model}</h2>
-                <div class="grade-badge ${gradeClass}">Grade ${laptop.grade} - ${laptop.condition}</div>
-                
-                <div class="pricing">
+                <div class="stock-info stock-available">Grade ${laptop.grade} - ${laptop.condition}</div>
+                <div class="laptop-pricing">
                     <span class="original-price">₹${laptop.original_price.toLocaleString()}</span>
                     <span class="current-price">₹${laptop.sell_price.toLocaleString()}</span>
                     <span class="discount">${discountPercent}% OFF</span>
                 </div>
-                
-                <div class="specifications">
-                    <h3>Specifications</h3>
-                    <div class="spec-grid">
-                        <div class="spec-item">
-                            <span class="spec-label">Processor:</span>
-                            <span class="spec-value">${laptop.processor}</span>
-                        </div>
-                        <div class="spec-item">
-                            <span class="spec-label">RAM:</span>
-                            <span class="spec-value">${laptop.ram}</span>
-                        </div>
-                        <div class="spec-item">
-                            <span class="spec-label">Storage:</span>
-                            <span class="spec-value">${laptop.storage}</span>
-                        </div>
-                        <div class="spec-item">
-                            <span class="spec-label">Screen:</span>
-                            <span class="spec-value">${laptop.screen}</span>
-                        </div>
-                        <div class="spec-item">
-                            <span class="spec-label">Warranty:</span>
-                            <span class="spec-value">${laptop.warranty}</span>
-                        </div>
+
+                <h3>Specifications</h3>
+                <div class="spec-grid">
+                    <div class="spec-item">
+                        <span class="spec-label">Processor:</span>
+                        <span class="spec-value">${laptop.processor}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">RAM:</span>
+                        <span class="spec-value">${laptop.ram}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Storage:</span>
+                        <span class="spec-value">${laptop.storage}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Screen:</span>
+                        <span class="spec-value">${laptop.screen}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Condition:</span>
+                        <span class="spec-value">${laptop.condition}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Warranty:</span>
+                        <span class="spec-value">${laptop.warranty}</span>
                     </div>
                 </div>
-                
-                <div class="features">
-                    <h3>Key Features</h3>
-                    <ul>
-                        ${laptop.features.map(feature => `<li>✅ ${feature}</li>`).join('')}
-                    </ul>
-                </div>
-                
-                <div class="actions">
-                    <button class="btn btn--primary" onclick="addToCart(${laptop.id})">Add to Cart</button>
-                    <button class="btn btn--secondary" onclick="closeModal('productModal')">Close</button>
+
+                <h3>Key Features</h3>
+                <ul>
+                    ${laptop.features.map(feature => `<li>✅ ${feature}</li>`).join('')}
+                </ul>
+
+                <div class="laptop-actions">
+                    <button class="btn btn--primary btn--full-width" onclick="addToCart(${laptop.id})">Add to Cart</button>
                 </div>
             </div>
         </div>
     `;
-    
+
     modal.style.display = 'block';
 }
 
@@ -619,14 +850,16 @@ function addToCart(laptopId) {
 
     localStorage.setItem('theonesourceitCart', JSON.stringify(cart));
     updateCartCount();
-    
+
     // Show success message
     showToast(`${laptop.brand} ${laptop.model} added to cart!`);
 }
 
 function updateCartCount() {
     const count = cart.reduce((total, item) => total + item.quantity, 0);
-    cartCount.textContent = count;
+    if (cartCount) {
+        cartCount.textContent = count;
+    }
 }
 
 function showCartModal() {
@@ -648,7 +881,7 @@ function showCartModal() {
                     <button onclick="updateCartQuantity(${item.id}, ${item.quantity - 1})">-</button>
                     <span>${item.quantity}</span>
                     <button onclick="updateCartQuantity(${item.id}, ${item.quantity + 1})">+</button>
-                    <button onclick="removeFromCart(${item.id})" class="remove-btn">Remove</button>
+                    <button class="remove-btn" onclick="removeFromCart(${item.id})">Remove</button>
                 </div>
             </div>
         `).join('');
@@ -760,10 +993,10 @@ function calculateQuote() {
     let conditionDeduction = 0;
     if (physical === 'fair') conditionDeduction += 3000;
     if (physical === 'good') conditionDeduction += 1000;
-    
+
     if (screen === 'major') conditionDeduction += 5000;
     if (screen === 'minor') conditionDeduction += 2000;
-    
+
     if (performance === 'poor') conditionDeduction += 4000;
     if (performance === 'good') conditionDeduction += 1000;
 
@@ -796,14 +1029,14 @@ function schedulePickup() {
 
     // Simulate successful scheduling
     showToast('Pickup scheduled successfully! You will receive a confirmation call from The One Source IT Solutions shortly.', 'success');
-    
+
     // Reset form
     document.getElementById('customerName').value = '';
     document.getElementById('customerPhone').value = '';
     document.getElementById('customerAddress').value = '';
     document.getElementById('pickupDate').value = '';
     document.getElementById('pickupTime').value = '';
-    
+
     // Go back to step 1
     nextStep(1);
 }
@@ -823,7 +1056,7 @@ function setupContactForm() {
 // Modal Functions
 function setupModals() {
     const modals = document.querySelectorAll('.modal');
-    
+
     modals.forEach(modal => {
         const closeBtn = modal.querySelector('.close');
         if (closeBtn) {
@@ -831,7 +1064,7 @@ function setupModals() {
                 modal.style.display = 'none';
             });
         }
-        
+
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 modal.style.display = 'none';
@@ -849,7 +1082,7 @@ function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `toast toast--${type}`;
     toast.textContent = message;
-    
+
     toast.style.cssText = `
         position: fixed;
         top: 24px;
@@ -867,9 +1100,9 @@ function showToast(message, type = 'success') {
         font-size: 0.875rem;
         line-height: 1.4;
     `;
-    
+
     document.body.appendChild(toast);
-    
+
     setTimeout(() => {
         toast.style.animation = 'slideOutRight 0.3s ease';
         setTimeout(() => {
@@ -893,7 +1126,7 @@ style.textContent = `
             opacity: 1;
         }
     }
-    
+
     @keyframes slideOutRight {
         from {
             transform: translateX(0);
@@ -904,15 +1137,19 @@ style.textContent = `
             opacity: 0;
         }
     }
-    
+
     .image-gallery {
         max-width: 300px;
     }
-    
+
     .image-gallery img {
         transition: transform 0.2s ease;
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin-bottom: 8px;
     }
-    
+
     .image-gallery img:hover {
         transform: scale(1.05);
     }
